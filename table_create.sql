@@ -24,3 +24,13 @@ create table player (
   constraint check_date     check (end_date is null or end_date > start_date),
   constraint check_val      check (value >= 0)
 );
+
+create table competition (
+  id      int         generated always as identity start with 1 increment by 1,
+  name    varchar(50) not null,
+  season  char(9)     not null,
+
+  constraint pk_competition primary key (id),
+  constraint unique_comp    unique (name, season),
+  constraint check_season   check (season ~ '^[0-9]{4}/[0-9]{4}$')
+);
