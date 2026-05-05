@@ -48,7 +48,7 @@ create table game (
   date        date,
   home_team   int,
   away_team   int,
-  home_score  int, /* not null to allow registration of games */
+  home_score  int, /* not null not enforced to allow registration of games */
   away_score  int,
   competition int not null,
 
