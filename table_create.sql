@@ -2,7 +2,7 @@ create table team (
   id    int         generated always as identity start with 1 increment by 1,
   city  varchar(50) not null,
   name  varchar(50) not null,
-  `
+
   constraint pk_team primary key (id)
 );
 
@@ -42,4 +42,21 @@ create table participates_in (
   constraint pk_part_in   primary key (competition, team),
   constraint fk_part_comp foreign key (competition) references competition(id) on update cascade on delete cascade,
   constraint fk_part_team foreign key (team) references team(id) on update cascade on delete cascade
+);
+
+create table game (
+  date        date,
+  home_team   int,
+  away_team   int,
+  home_score  int, /* not null to allow registration of games */
+  away_score  int,
+  competition int not null,
+
+  constraint pk_game      primary key (date, home_team, away_team),
+  constraint fk_home      foreign key (home_team) references team(id) on update cascade on delete cascade,
+  constraint fk_away      foreign key (away_team) references team(id) on update cascade on delete cascade,
+  constraint fk_game_comp foreign key (competition) references competition(id) on update cascade on delete cascade,
+
+  constraint check_teams  check (home_team <> away_team),
+  constraint check_scores check (home_score >= 0 and away_score >= 0)
 );
