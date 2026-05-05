@@ -2,7 +2,7 @@ create table team (
   id    int         generated always as identity start with 1 increment by 1,
   city  varchar(50) not null,
   name  varchar(50) not null,
-  
+  `
   constraint pk_team primary key (id)
 );
 
@@ -33,4 +33,13 @@ create table competition (
   constraint pk_competition primary key (id),
   constraint unique_comp    unique (name, season),
   constraint check_season   check (season ~ '^[0-9]{4}/[0-9]{4}$')
+);
+
+create table participates_in (
+  competition int,
+  team        int,
+
+  constraint pk_part_in   primary key (competition, team),
+  constraint fk_part_comp foreign key (competition) references competition(id) on update cascade on delete cascade,
+  constraint fk_part_team foreign key (team) references team(id) on update cascade on delete cascade
 );
