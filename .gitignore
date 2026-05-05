@@ -39,3 +39,6 @@
 
 # debug information files
 *.dwo
+
+# commands to connect to db and run sql
+commands.txt
