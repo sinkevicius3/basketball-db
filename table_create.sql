@@ -45,11 +45,11 @@ create table participates_in (
 );
 
 create table game (
-  date        date,
+  date        date default current_date,
   home_team   int,
   away_team   int,
-  home_score  int, /* not null not enforced to allow registration of games */
-  away_score  int,
+  home_score  int default 0,
+  away_score  int default 0,
   competition int not null,
 
   constraint pk_game      primary key (date, home_team, away_team),
