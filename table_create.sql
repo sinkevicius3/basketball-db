@@ -21,7 +21,7 @@ create table player (
   constraint pk_player      primary key (id),
   constraint fk_player_team foreign key (team) references team(id) on update cascade on delete set null,
   constraint check_pos      check (position in ('G', 'F', 'C')),
-  constraint check_date     check (end_date is null or end_date > start_date),
+  constraint check_date     check (end_date is null or (end_date > start_date and end_date > current_date)),
   constraint check_val      check (value >= 0)
 );
 
