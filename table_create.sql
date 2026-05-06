@@ -1,5 +1,5 @@
 create table team (
-  id    int         generated always as identity start with 1 increment by 1,
+  id    int         generated always as identity (start with 1 increment by 1),
   city  varchar(50) not null,
   name  varchar(50) not null,
 
@@ -7,7 +7,7 @@ create table team (
 );
 
 create table player (
-  id          int         generated always as identity start with 1 increment by 1,
+  id          int         generated always as identity (start with 1 increment by 1),
   first_name  varchar(50) not null,
   last_name   varchar(50) not null,
   birth_date  date        not null,
@@ -26,7 +26,7 @@ create table player (
 );
 
 create table competition (
-  id      int         generated always as identity start with 1 increment by 1,
+  id      int         generated always as identity (start with 1 increment by 1),
   name    varchar(50) not null,
   season  char(9)     not null,
 
