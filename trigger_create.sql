@@ -41,6 +41,6 @@ $$
 language plpgsql;
 
 create trigger trg_team_comp
-before insert on game
+before insert or update on game
 for each row
 execute function check_teams_comp();
