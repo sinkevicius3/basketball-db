@@ -42,3 +42,9 @@
 
 # commands to connect to db and run sql
 commands.txt
+
+# queries to run for testing purposes
+queries.txt
+
+# queries testing files
+query_test.sql
