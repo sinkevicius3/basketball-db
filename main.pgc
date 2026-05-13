@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MENU_OPTIONS 4
+#define MENU_OPTIONS 5
 #define SQLCODE sqlca.sqlcode
 
 void connect_db();
@@ -20,6 +20,7 @@ void flushInput();
 void addPlayer();
 void showPlayers();
 void updatePlayers();
+void deletePlayer();
 
 EXEC SQL INCLUDE sqlca.h;
 
@@ -47,6 +48,7 @@ void printMenuOptions() {
   printf("1) Add player.\n");
   printf("2) Show players.\n");
   printf("3) Update player.\n");
+  printf("4) Delete player.\n");
   printf("0) Exit.\n\n");
 }
 
@@ -469,6 +471,59 @@ void updatePlayer() {
     EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
+void deletePlayer() {
+  EXEC SQL BEGIN DECLARE SECTION;
+    int target_id;
+  EXEC SQL END DECLARE SECTION;
+
+  char id_buf[12];
+  char confirm_buf[4];
+
+  showPlayers();
+
+  if (getInput("\nEnter player ID to delete (or press Enter to cancel): ", id_buf, sizeof(id_buf)) == 0){
+    return;
+  }
+
+  target_id = atoi(id_buf);
+
+  char confirm_prompt[80];
+  snprintf(confirm_prompt, sizeof(confirm_prompt), "Are you sure you want to delete player (id = %d)? (yes/no): ", target_id);
+  if (getInput(confirm_prompt, confirm_buf, sizeof(confirm_buf)) == 0) {
+    return;
+  }
+
+  if (strcmp(confirm_buf, "yes") != 0) {
+    return;
+  }
+
+  EXEC SQL WHENEVER SQLERROR GOTO error;
+  EXEC SQL WHENEVER NOT FOUND GOTO not_found;
+
+  EXEC SQL DELETE FROM player WHERE id = :target_id;
+
+  EXEC SQL COMMIT;
+  
+  printf("Player deleted successfully!\n");
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  EXEC SQL WHENEVER NOT FOUND CONTINUE;
+
+  return;
+
+  not_found:
+    printf("Player with ID %d not found.\n", target_id);
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL WHENEVER NOT FOUND CONTINUE;
+    return;
+
+  error:
+    printf("Error deleting player: %s\n", sqlca.sqlerrm.sqlerrmc);
+    EXEC SQL ROLLBACK;
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL WHENEVER NOT FOUND CONTINUE;
+}
+
 int main (int argc, char**argv) {
 
   int option;
@@ -488,6 +543,9 @@ int main (int argc, char**argv) {
         break;
       case 3:
         updatePlayer();
+        break;
+      case 4:
+        deletePlayer();
         break;
       case 0:
         disconnect_db();
