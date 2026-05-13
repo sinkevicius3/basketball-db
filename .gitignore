@@ -48,3 +48,7 @@ queries.txt
 
 # queries testing files
 query_test.sql
+
+# main.pgc compiled files
+main.c
+main
