@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MENU_OPTIONS 5
+#define MENU_OPTIONS 6
 #define SQLCODE sqlca.sqlcode
 
 void connect_db();
@@ -18,6 +18,7 @@ void addPlayer();
 void showPlayerExtendedInfo();
 void updatePlayer();
 void deletePlayer();
+void tradePlayers();
 
 EXEC SQL INCLUDE sqlca.h;
 
@@ -46,6 +47,7 @@ void printMenuOptions() {
   printf("2) Show players.\n");
   printf("3) Update player.\n");
   printf("4) Delete player.\n");
+  printf("5) Trade players.\n");
   printf("0) Exit.\n\n");
 }
 
@@ -470,6 +472,91 @@ void deletePlayer() {
     EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
+void tradePlayers() {
+  EXEC SQL BEGIN DECLARE SECTION;
+    int player1_id;
+    int player2_id;
+    int player1_team;
+    int player2_team;
+    char player1_name[102];
+    char player2_name[102];
+    int p1_team_ind;
+    int p2_team_ind;
+  EXEC SQL END DECLARE SECTION;
+
+  char id_buf[12];
+  char confirm_buf[4];
+
+  EXEC SQL WHENEVER SQLERROR GOTO error;
+  EXEC SQL WHENEVER NOT FOUND GOTO not_found;
+
+  showPlayerExtendedInfo();
+
+  if (getInput("\nEnter first player ID (or press Enter to cancel): ", id_buf, sizeof(id_buf)) == 0) {
+    return;
+  }
+  player1_id = atoi(id_buf);
+
+  EXEC SQL SELECT team, first_name || ' ' || last_name
+    INTO :player1_team INDICATOR :p1_team_ind, :player1_name
+    FROM player
+    WHERE id = :player1_id;
+
+  if (getInput("Enter second player ID (or press Enter to cancel): ", id_buf, sizeof(id_buf)) == 0) {
+    return;
+  }
+  player2_id = atoi(id_buf);
+
+  EXEC SQL SELECT team, first_name || ' ' || last_name
+    INTO :player2_team INDICATOR :p2_team_ind, :player2_name
+    FROM player
+    WHERE id = :player2_id;
+
+  if (p1_team_ind == -1 || p2_team_ind == -1 || player1_team == player2_team || player1_id == player2_id) {
+    printf("Invalid trade: players must be on different teams and both must have a team.\n");
+    return;
+  }
+
+  printf("\nTrade details:\n");
+  printf("%s (team id = %d) <-> %s (team id = %d)\n", player1_name, player1_team, player2_name, player2_team);
+
+  if (getInput("Confirm trade? (yes/no): ", confirm_buf, sizeof(confirm_buf)) == 0) {
+    return;
+  }
+
+  if (strcmp(confirm_buf, "yes") != 0) {
+    printf("Trade cancelled.\n");
+    return;
+  }
+
+  EXEC SQL UPDATE player
+    SET team = :player2_team
+    WHERE id = :player1_id;
+
+  EXEC SQL UPDATE player
+    SET team = :player1_team
+    WHERE id = :player2_id;
+
+  EXEC SQL COMMIT;
+  printf("Trade completed successfully!\n");
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  EXEC SQL WHENEVER NOT FOUND CONTINUE;
+  return;
+
+  not_found:
+    printf("Player not found.\n");
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL WHENEVER NOT FOUND CONTINUE;
+    return;
+
+  error:
+    printf("Error trading players: %s\n", sqlca.sqlerrm.sqlerrmc);
+    EXEC SQL ROLLBACK;
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL WHENEVER NOT FOUND CONTINUE;
+}
+
 int main(int argc, char **argv) { 
   int option;
   char c;
@@ -497,6 +584,9 @@ int main(int argc, char **argv) {
         break;
       case 4:
         deletePlayer();
+        break;
+      case 5:
+        tradePlayers();
         break;
       case 0:
         disconnect_db();
