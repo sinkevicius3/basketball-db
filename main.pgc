@@ -487,10 +487,10 @@ void tradePlayers() {
   char id_buf[12];
   char confirm_buf[4];
 
+  showPlayerExtendedInfo();
+
   EXEC SQL WHENEVER SQLERROR GOTO error;
   EXEC SQL WHENEVER NOT FOUND GOTO not_found;
-
-  showPlayerExtendedInfo();
 
   if (getInput("\nEnter first player ID (or press Enter to cancel): ", id_buf, sizeof(id_buf)) == 0) {
     return;
