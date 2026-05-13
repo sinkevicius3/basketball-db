@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MENU_OPTIONS 2
+#define MENU_OPTIONS 3
 #define SQLCODE sqlca.sqlcode
 
 void connect_db();
@@ -41,6 +41,7 @@ void disconnect_db() {
 void printMenuOptions() {
   printf("\n=== Basketball DB ===\n");
   printf("1) Add player.\n");
+  printf("2) Show players.\n");
   printf("0) Exit.\n\n");
 }
 
@@ -196,6 +197,68 @@ void addPlayer() {
   printf("Player added successfully!\n");
 }
 
+void showPlayers() {
+  EXEC SQL BEGIN DECLARE SECTION;
+    int p_id;
+    char p_first_name[51];
+    char p_last_name[51];
+    char p_birth_date[11];
+    char p_nationality[4];
+    char p_position[2];
+    int p_team;
+    char p_start_date[11];
+    char p_end_date[11];
+    double p_value;
+    int p_age;
+    int p_contract_days_left;
+    int p_team_ind;
+    int p_position_ind;
+    int p_start_date_ind;
+    int p_end_date_ind;
+    int p_value_ind;
+    int p_contract_days_left_ind;
+  EXEC SQL END DECLARE SECTION;
+
+  printf("\n=== Players ===\n");
+
+  EXEC SQL DECLARE player_cursor CURSOR FOR
+    SELECT id, first_name, last_name, birth_date, nationality, position, team,
+           start_date, end_date, value, age, contract_days_left
+    FROM player_extended_info;
+
+  EXEC SQL OPEN player_cursor;
+
+  printf("|| %-4s || %-15s || %-15s || %-10s || %-3s || %-4s || %-4s || %-10s || %-10s || %-12s || %-4s || %-10s ||\n",
+    "ID", "First name", "Last name", "Birth date", "Nat", "Pos", "Team",
+    "Start date", "End date", "Value", "Age", "Days left");
+
+  while (1) {
+    EXEC SQL FETCH player_cursor INTO
+      :p_id, :p_first_name, :p_last_name, :p_birth_date, :p_nationality,
+      :p_position INDICATOR :p_position_ind,
+      :p_team INDICATOR :p_team_ind,
+      :p_start_date INDICATOR :p_start_date_ind,
+      :p_end_date INDICATOR :p_end_date_ind,
+      :p_value INDICATOR :p_value_ind,
+      :p_age,
+      :p_contract_days_left INDICATOR :p_contract_days_left_ind;
+
+    if (SQLCODE != 0) break;
+
+    printf("|| %-4d || %-15s || %-15s || %-10s || %-3s || %-4s || %-4d || %-10s || %-10s || %-12.2f || %-4d || %-10d ||\n",
+      p_id, p_first_name, p_last_name, p_birth_date, p_nationality,
+      p_position_ind == -1 ? "N/A" : p_position,
+      p_team_ind == -1 ? 0 : p_team,
+      p_start_date_ind == -1 ? "N/A" : p_start_date,
+      p_end_date_ind == -1 ? "N/A" : p_end_date,
+      p_value_ind == -1 ? 0.0 : p_value,
+      p_age,
+      p_contract_days_left_ind == -1 ? 0 : p_contract_days_left);
+  }
+
+  EXEC SQL CLOSE player_cursor;
+}
+
 
 int main (int argc, char**argv) {
 
@@ -210,6 +273,9 @@ int main (int argc, char**argv) {
     switch (option){
       case 1: 
         addPlayer();
+        break;
+      case 2:
+        showPlayers();
         break;
       case 0:
         disconnect_db();
