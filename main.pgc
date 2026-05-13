@@ -219,16 +219,19 @@ void showPlayers() {
     int p_contract_days_left_ind;
   EXEC SQL END DECLARE SECTION;
 
+  EXEC SQL WHENEVER SQLERROR GOTO error;
+  EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
   printf("\n=== Players ===\n");
 
   EXEC SQL DECLARE player_cursor CURSOR FOR
     SELECT id, first_name, last_name, birth_date, nationality, position, team,
-           start_date, end_date, value, age, contract_days_left
+      start_date, end_date, value, age, contract_days_left
     FROM player_extended_info;
 
   EXEC SQL OPEN player_cursor;
 
-  printf("|| %-4s || %-15s || %-15s || %-10s || %-3s || %-4s || %-4s || %-10s || %-10s || %-12s || %-4s || %-10s ||\n",
+  printf("|| %-4s || %-20s || %-20s || %-10s || %-3s || %-4s || %-4s || %-10s || %-10s || %-12s || %-4s || %-10s ||\n",
     "ID", "First name", "Last name", "Birth date", "Nat", "Pos", "Team",
     "Start date", "End date", "Value", "Age", "Days left");
 
@@ -243,9 +246,7 @@ void showPlayers() {
       :p_age,
       :p_contract_days_left INDICATOR :p_contract_days_left_ind;
 
-    if (SQLCODE != 0) break;
-
-    printf("|| %-4d || %-15s || %-15s || %-10s || %-3s || %-4s || %-4d || %-10s || %-10s || %-12.2f || %-4d || %-10d ||\n",
+    printf("|| %-4d || %-20s || %-20s || %-10s || %-3s || %-4s || %-4d || %-10s || %-10s || %-12.2f || %-4d || %-10d ||\n",
       p_id, p_first_name, p_last_name, p_birth_date, p_nationality,
       p_position_ind == -1 ? "N/A" : p_position,
       p_team_ind == -1 ? 0 : p_team,
@@ -257,6 +258,15 @@ void showPlayers() {
   }
 
   EXEC SQL CLOSE player_cursor;
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  EXEC SQL WHENEVER NOT FOUND CONTINUE;
+  return;
+
+  error:
+    printf("Database error: %s\n", sqlca.sqlerrm.sqlerrmc);
+    EXEC SQL CLOSE player_cursor;
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
 
