@@ -133,6 +133,9 @@ void addPlayer() {
   char team_buf[12];
   char value_buf[20];
 
+  EXEC SQL WHENEVER SQLERROR GOTO error;
+  EXEC SQL WHENEVER NOT FOUND DO BREAK;
+
   getInput("Enter first name: ", first_name, sizeof(first_name));
   getInput("Enter last name: ", last_name, sizeof(last_name));
   getInput("Enter birth date (YYYY-MM-DD): ", birth_date, sizeof(birth_date));
@@ -158,10 +161,11 @@ void addPlayer() {
 
   while (1) {
     EXEC SQL FETCH team_cursor INTO :t_id, :t_name, :t_city;
-    if (SQLCODE != 0) break;
     printf("%d) %s %s\n", t_id, t_city, t_name);
   }
   EXEC SQL CLOSE team_cursor;
+
+  EXEC SQL WHENEVER NOT FOUND CONTINUE;
 
   if (getInput("\nEnter team ID (or press Enter to skip): ", team_buf, sizeof(team_buf))) {
     team_id = atoi(team_buf);
@@ -187,14 +191,18 @@ void addPlayer() {
     :team_id INDICATOR :team_id_ind, :start_date INDICATOR :start_date_ind,
     :end_date INDICATOR :end_date_ind, :value INDICATOR :value_ind);
 
-  if (SQLCODE != 0) {
-    printf("Error adding player: %s\n", sqlca.sqlerrm.sqlerrmc);
-    EXEC SQL ROLLBACK;
-    return;
-  }
-
   EXEC SQL COMMIT;
   printf("Player added successfully!\n");
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  EXEC SQL WHENEVER NOT FOUND CONTINUE;
+  return;
+
+  error:
+    printf("Error adding player: %s\n", sqlca.sqlerrm.sqlerrmc);
+    EXEC SQL ROLLBACK;
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
 void showPlayers() {
