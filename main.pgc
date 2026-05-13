@@ -267,8 +267,7 @@ void updatePlayer() {
   EXEC SQL WHENEVER SQLERROR GOTO error;
   EXEC SQL WHENEVER NOT FOUND GOTO not_found;
 
-  EXEC SQL SELECT first_name, last_name, birth_date, nationality, position, team,
-      start_date, end_date, value
+  EXEC SQL SELECT first_name, last_name, birth_date, nationality, position, team, start_date, end_date, value
     INTO :first_name, :last_name, :birth_date, :nationality,
       :position INDICATOR :position_ind,
       :team_id INDICATOR :team_id_ind,
