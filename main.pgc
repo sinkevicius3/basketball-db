@@ -16,8 +16,8 @@ int getInput(const char *msg, char *buffer, int size);
 void flushInput();
 
 void addPlayer();
-void showPlayers();
-void updatePlayers();
+void showPlayerExtendedInfo();
+void updatePlayer();
 void deletePlayer();
 
 EXEC SQL INCLUDE sqlca.h;
@@ -160,7 +160,7 @@ void addPlayer() {
     EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
-void showPlayers() {
+void showPlayerExtendedInfo() {
   EXEC SQL BEGIN DECLARE SECTION;
     int p_id;
     char p_first_name[51];
@@ -257,7 +257,7 @@ void updatePlayer() {
   char buf[51];
   char id_buf[12];
 
-  showPlayers();
+  showPlayerExtendedInfo();
 
   if (getInput("\nEnter player ID to update (or press Enter to cancel): ", id_buf, sizeof(id_buf)) == 0) {
     return;
@@ -427,7 +427,7 @@ void deletePlayer() {
   char id_buf[12];
   char confirm_buf[4];
 
-  showPlayers();
+  showPlayerExtendedInfo();
 
   if (getInput("\nEnter player ID to delete (or press Enter to cancel): ", id_buf, sizeof(id_buf)) == 0){
     return;
@@ -492,7 +492,7 @@ int main(int argc, char **argv) {
         addPlayer();
         break;
       case 2:
-        showPlayers();
+        showPlayerExtendedInfo();
         break;
       case 3:
         updatePlayer();
