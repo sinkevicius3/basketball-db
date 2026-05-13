@@ -12,7 +12,6 @@ void disconnect_db();
 void printMenuOptions();
 
 int getInput(const char *msg, char *buffer, int size);
-
 void flushInput();
 
 void addPlayer();
@@ -483,7 +482,7 @@ int main(int argc, char **argv) {
     printf("Enter the option's number: ");
     if (scanf("%d%c", &option, &c) != 2 || c != '\n') {
       printf("Incorrect input, please enter an integer.\n");
-      scanf("%*[^\n]%*c");
+      flushInput();
       continue;
     }
 
