@@ -500,6 +500,7 @@ int main(int argc, char **argv) {
         break;
       case 0:
         disconnect_db();
+        printf("Shutting down...\n");
         exit(0);
       default:
         printf("Option does not exist.\n");
