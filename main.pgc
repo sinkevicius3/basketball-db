@@ -8,11 +8,9 @@
 
 void connect_db();
 void disconnect_db();
-void printMenuOptions();
-void printPointerError(const char *msg);
 
-int isIntegerInRange(const int rangeStart, const int rangeEnd, const int value);
-int getValidatedInteger(const int rangeStart, const int rangeEnd, const char *inputMsg);
+void printMenuOptions();
+
 int getInput(const char *msg, char *buffer, int size);
 
 void flushInput();
@@ -52,57 +50,7 @@ void printMenuOptions() {
   printf("0) Exit.\n\n");
 }
 
-void printPointerError(const char *msg) {
-  if (msg != NULL){
-    printf ("Pointer error in: '%s'.\n\n", msg);
-  } else {
-    printf ("Pointer error in 'printPointerError'.\n\n");
-  }
-}
-
-int isIntegerInRange(const int rangeStart, const int rangeEnd, const int value) {
-  if ((value >= rangeStart) && (value <= rangeEnd)){
-    return 1;
-  }
-  return 0;
-}
-
-int getValidatedInteger(const int rangeStart, const int rangeEnd, const char *inputMsg) {
-  if (inputMsg != NULL){
-    
-    int number;
-    char c;
-
-    while (1){
-      printf("%s", inputMsg);
-      if (((scanf("%d%c", &number, &c) ==  2) && (c == '\n'))){
-
-        if (isIntegerInRange(rangeStart, rangeEnd, number)){
-          printf("Value %d was successfully registered.\n\n", number);
-          break;
-        }
-
-        else{
-          printf("Entered number is out of range! Please enter an integer value that is in the range [%d; %d].\n\n", rangeStart, rangeEnd);
-        }
-      } else {
-          printf("Incorrect type of input! Please enter an integer value.\n\n");
-          scanf("%*[^\n]%*c");
-      }
-    }
-
-    return number;
-  } else {
-    printPointerError("getValidatedInteger");
-    return -1;
-  }
-}
-
 int getInput(const char *msg, char *buffer, int size) {
-  if (msg == NULL || buffer == NULL) {
-    printPointerError("getInput");
-    return -1;
-  }
   printf("%s", msg);
   fgets(buffer, size, stdin);
   if (buffer[strcspn(buffer, "\n")] == '\n') {
@@ -503,7 +451,7 @@ void deletePlayer() {
   EXEC SQL DELETE FROM player WHERE id = :target_id;
 
   EXEC SQL COMMIT;
-  
+
   printf("Player deleted successfully!\n");
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
@@ -524,18 +472,23 @@ void deletePlayer() {
     EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
-int main (int argc, char**argv) {
-
+int main(int argc, char **argv) { 
   int option;
+  char c;
 
   connect_db();
 
-  while (1){
+  while (1) {
     printMenuOptions();
-    option = getValidatedInteger (0, (MENU_OPTIONS - 1), "Enter the option's number: ");
+    printf("Enter the option's number: ");
+    if (scanf("%d%c", &option, &c) != 2 || c != '\n') {
+      printf("Incorrect input, please enter an integer.\n");
+      scanf("%*[^\n]%*c");
+      continue;
+    }
 
-    switch (option){
-      case 1: 
+    switch (option) {
+      case 1:
         addPlayer();
         break;
       case 2:
@@ -555,6 +508,6 @@ int main (int argc, char**argv) {
         break;
     }
   }
-  
+
   return 0;
 }
