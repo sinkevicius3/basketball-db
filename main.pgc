@@ -170,12 +170,14 @@ void showPlayerExtendedInfo() {
     char nationality[4];
     char position[2];
     int team;
+    char team_name[102];
     char start_date[11];
     char end_date[11];
     double value;
     int age;
     int contract_days_left;
     int team_ind;
+    int team_name_ind;
     int position_ind;
     int start_date_ind;
     int end_date_ind;
@@ -183,37 +185,49 @@ void showPlayerExtendedInfo() {
     int contract_days_left_ind;
   EXEC SQL END DECLARE SECTION;
 
+  char team_str[12];
+
   EXEC SQL WHENEVER SQLERROR GOTO error;
   EXEC SQL WHENEVER NOT FOUND DO BREAK;
 
   printf("\n=== Players ===\n");
 
   EXEC SQL DECLARE player_cursor CURSOR FOR
-    SELECT id, first_name, last_name, birth_date, nationality, position, team,
-      start_date, end_date, value, age, contract_days_left
-    FROM player_extended_info;
+  SELECT p.id, p.first_name, p.last_name, p.birth_date, p.nationality,
+    p.position, p.team, t.city || ' ' || t.name AS team_name,
+    p.start_date, p.end_date, p.value, p.age, p.contract_days_left
+  FROM player_extended_info p
+  LEFT OUTER JOIN team t ON p.team = t.id;
 
   EXEC SQL OPEN player_cursor;
 
-  printf("|| %-4s || %-20s || %-20s || %-10s || %-3s || %-4s || %-4s || %-10s || %-10s || %-12s || %-4s || %-10s ||\n",
+  printf("|| %-4s || %-20s || %-20s || %-10s || %-3s || %-4s || %-4s || %-20s || %-10s || %-10s || %-12s || %-4s || %-10s ||\n",
     "ID", "First name", "Last name", "Birth date", "Nat", "Pos", "Team",
-    "Start date", "End date", "Value", "Age", "Days left");
+    "Team name", "Start date", "End date", "Value", "Age", "Days left");
 
   while (1) {
     EXEC SQL FETCH player_cursor INTO
       :id, :first_name, :last_name, :birth_date, :nationality,
       :position INDICATOR :position_ind,
       :team INDICATOR :team_ind,
+      :team_name INDICATOR :team_name_ind,
       :start_date INDICATOR :start_date_ind,
       :end_date INDICATOR :end_date_ind,
       :value INDICATOR :value_ind,
       :age,
       :contract_days_left INDICATOR :contract_days_left_ind;
 
-    printf("|| %-4d || %-20s || %-20s || %-10s || %-3s || %-4s || %-4d || %-10s || %-10s || %-12.2f || %-4d || %-10d ||\n",
+    if (team_ind == -1) {
+      strcpy(team_str, "N/A");
+    } else {
+      snprintf(team_str, sizeof(team_str), "%d", team);
+    }
+
+    printf("|| %-4d || %-20s || %-20s || %-10s || %-3s || %-4s || %-4s || %-20s || %-10s || %-10s || %-12.2f || %-4d || %-10d ||\n",
       id, first_name, last_name, birth_date, nationality,
       position_ind == -1 ? "N/A" : position,
-      team_ind == -1 ? 0 : team,
+      team_str,
+      team_name_ind == -1 ? "N/A" : team_name,
       start_date_ind == -1 ? "N/A" : start_date,
       end_date_ind == -1 ? "N/A" : end_date,
       value_ind == -1 ? 0.0 : value,
@@ -226,11 +240,11 @@ void showPlayerExtendedInfo() {
   EXEC SQL WHENEVER NOT FOUND CONTINUE;
   return;
 
-  error:
-    printf("Database error: %s\n", sqlca.sqlerrm.sqlerrmc);
-    EXEC SQL CLOSE player_cursor;
-    EXEC SQL WHENEVER SQLERROR CONTINUE;
-    EXEC SQL WHENEVER NOT FOUND CONTINUE;
+error:
+  printf("Database error: %s\n", sqlca.sqlerrm.sqlerrmc);
+  EXEC SQL CLOSE player_cursor;
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  EXEC SQL WHENEVER NOT FOUND CONTINUE;
 }
 
 void updatePlayer() {
