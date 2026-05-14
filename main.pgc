@@ -529,6 +529,10 @@ void tradePlayers() {
     return;
   }
 
+  EXEC SQL COMMIT;
+
+  EXEC SQL BEGIN TRANSACTION;
+
   EXEC SQL UPDATE player
     SET team = :player2_team
     WHERE id = :player1_id;
